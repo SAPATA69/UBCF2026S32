@@ -1,27 +1,38 @@
 package cs.pattharaphon.atthajak.ubcf2026s3;
 
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import cs.pattharaphon.atthajak.ubcf2026s3.adapter.CandleAdapter;
 import cs.pattharaphon.atthajak.ubcf2026s3.model.Candle;
 
 public class CandleActivity extends AppCompatActivity {
-    private RecyclerView
+    private static final String CANDLES_URL =
+            "https://pattharaphon.pythonanywhere.com/api/uboncandlefest/candles";
 
-    private CandleAdaper
-
-    private List<Candle
+    private RecyclerView recyclerView;
+    private CandleAdapter candleAdapter;
+    private ArrayList<Candle> candles;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,30 +45,69 @@ public class CandleActivity extends AppCompatActivity {
             return insets;
         });
 
-        matchview();
-        candles = new ArrayList<>()
+        candles = new ArrayList<>();
+        recyclerView = findViewById(R.id.recycler_candles);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        candleAdapter = new CandleAdapter(this, candles);
+        recyclerView.setAdapter(candleAdapter);
+        loadCandles();
     }
-    private void matchview() {
-        string url = https://pattharaphon.pythonanywhere.com/candles/candle
-        JSONArrayRequest request;
-        request = new JSONArrayRequest(
-                url
-         public void onRespone(JSONArray JsonArray) {
-                    int size = jsonArray kength();
-                    for (int i=0; i<size; i++) {
-                        try {
-                            JSONObject object = jsonArray.getJsonobject(i);
-                            Candle candle = new Candle
-                                  object.getInt("id")
-                                  object.getInt("name")
-                                  object.getInt("owder")
 
-                        }
+    private void loadCandles() {
+        executor.execute(() -> {
+            try {
+                HttpURLConnection connection =
+                        (HttpURLConnection) new URL(CANDLES_URL).openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(10000);
+
+                int status = connection.getResponseCode();
+                if (status < 200 || status >= 300) {
+                    throw new IllegalStateException("API returned HTTP " + status);
+                }
+
+                StringBuilder response = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(connection.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
                     }
-        }
+                } finally {
+                    connection.disconnect();
+                }
 
+                JSONArray jsonArray = new JSONArray(response.toString());
+                ArrayList<Candle> loadedCandles = new ArrayList<>();
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject object = jsonArray.getJSONObject(i);
+                    loadedCandles.add(new Candle(
+                            object.optInt("id"),
+                            object.optString("name", ""),
+                            object.optString("owner", "ไม่ระบุ"),
+                            object.optString("temple_name", "ไม่ระบุ")
+                    ));
+                }
 
-        );
+                runOnUiThread(() -> {
+                    candles.clear();
+                    candles.addAll(loadedCandles);
+                    candleAdapter.notifyDataSetChanged();
+                });
+            } catch (Exception error) {
+                runOnUiThread(() -> Toast.makeText(
+                        this,
+                        "โหลดข้อมูลเทียนไม่สำเร็จ: " + error.getMessage(),
+                        Toast.LENGTH_LONG
+                ).show());
+            }
+        });
+    }
 
+    @Override
+    protected void onDestroy() {
+        executor.shutdownNow();
+        super.onDestroy();
     }
 }

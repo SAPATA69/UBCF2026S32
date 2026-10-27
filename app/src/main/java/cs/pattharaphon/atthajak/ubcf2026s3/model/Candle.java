@@ -8,12 +8,28 @@ public class Candle {
         this.templeName = templeName;
     }
 
-    private imt id;
+    private int id;
 
     private String name;
 
     private String owner;
 
     private String templeName;
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public String getTempleName() {
+        return templeName;
+    }
 
 }
