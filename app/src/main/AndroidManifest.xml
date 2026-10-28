@@ -32,6 +32,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".TempleDetailActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".UserActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

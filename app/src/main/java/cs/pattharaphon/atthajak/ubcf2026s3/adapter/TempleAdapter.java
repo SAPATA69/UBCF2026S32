@@ -15,12 +15,18 @@ import cs.pattharaphon.atthajak.ubcf2026s3.R;
 import cs.pattharaphon.atthajak.ubcf2026s3.model.Temple;
 
 public class TempleAdapter extends RecyclerView.Adapter<TempleAdapter.TempleViewHolder> {
+    public interface OnTempleClickListener {
+        void onTempleClick(Temple temple);
+    }
+
     private final Context context;
     private final List<Temple> temples;
+    private final OnTempleClickListener listener;
 
-    public TempleAdapter(Context context, List<Temple> temples) {
+    public TempleAdapter(Context context, List<Temple> temples, OnTempleClickListener listener) {
         this.context = context;
         this.temples = temples;
+        this.listener = listener;
     }
 
     @NonNull
@@ -35,6 +41,7 @@ public class TempleAdapter extends RecyclerView.Adapter<TempleAdapter.TempleView
         Temple temple = temples.get(position);
         holder.name.setText(temple.getName());
         holder.description.setText(temple.getDescription());
+        holder.itemView.setOnClickListener(view -> listener.onTempleClick(temple));
     }
 
     @Override

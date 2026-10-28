@@ -1,6 +1,7 @@
 package cs.pattharaphon.atthajak.ubcf2026s3;
 
 import android.os.Bundle;
+import android.content.Intent;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,7 +37,11 @@ public class TempleActivity extends AppCompatActivity {
 
         RecyclerView recyclerView = findViewById(R.id.rcv_temple);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new TempleAdapter(this, temples);
+        adapter = new TempleAdapter(this, temples, temple -> {
+            Intent intent = new Intent(this, TempleDetailActivity.class);
+            intent.putExtra(TempleDetailActivity.EXTRA_TEMPLE_ID, temple.getId());
+            startActivity(intent);
+        });
         recyclerView.setAdapter(adapter);
         loadTemples();
     }
