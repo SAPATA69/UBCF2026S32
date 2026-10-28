@@ -15,12 +15,18 @@ import cs.pattharaphon.atthajak.ubcf2026s3.R;
 import cs.pattharaphon.atthajak.ubcf2026s3.model.User;
 
 public class UserAdaper extends RecyclerView.Adapter<UserAdaper.UserViewHolder> {
+    public interface OnUserClickListener {
+        void onUserClick(User user);
+    }
+
     private final Context context;
     private final List<User> users;
+    private final OnUserClickListener listener;
 
-    public UserAdaper(Context context, List<User> users) {
+    public UserAdaper(Context context, List<User> users, OnUserClickListener listener) {
         this.context = context;
         this.users = users;
+        this.listener = listener;
     }
 
     @NonNull
@@ -35,6 +41,7 @@ public class UserAdaper extends RecyclerView.Adapter<UserAdaper.UserViewHolder> 
         User user = users.get(position);
         holder.username.setText(user.getUsername());
         holder.email.setText(user.getEmail());
+        holder.itemView.setOnClickListener(view -> listener.onUserClick(user));
     }
 
     @Override

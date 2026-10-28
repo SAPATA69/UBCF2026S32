@@ -1,6 +1,7 @@
 package cs.pattharaphon.atthajak.ubcf2026s3;
 
 import android.os.Bundle;
+import android.content.Intent;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,7 +37,11 @@ public class UserActivity extends AppCompatActivity {
 
         RecyclerView recyclerView = findViewById(R.id.rcv_user);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new UserAdaper(this, users);
+        adapter = new UserAdaper(this, users, user -> {
+            Intent intent = new Intent(this, UserDetailActivity.class);
+            intent.putExtra(UserDetailActivity.EXTRA_USER_ID, user.getId());
+            startActivity(intent);
+        });
         recyclerView.setAdapter(adapter);
         loadUsers();
     }
