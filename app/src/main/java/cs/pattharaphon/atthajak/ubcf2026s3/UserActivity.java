@@ -1,12 +1,99 @@
 package cs.pattharaphon.atthajak.ubcf2026s3;
 
 import android.os.Bundle;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import cs.pattharaphon.atthajak.ubcf2026s3.adapter.UserAdaper;
+import cs.pattharaphon.atthajak.ubcf2026s3.model.User;
 
 public class UserActivity extends AppCompatActivity {
+    private static final String USERS_URL =
+            "https://pattharaphon.pythonanywhere.com/api/uboncandlefest/users";
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ArrayList<User> users = new ArrayList<>();
+    private UserAdaper adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_user);
+
+        RecyclerView recyclerView = findViewById(R.id.rcv_user);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new UserAdaper(this, users);
+        recyclerView.setAdapter(adapter);
+        loadUsers();
+    }
+
+    private void loadUsers() {
+        executor.execute(() -> {
+            try {
+                HttpURLConnection connection =
+                        (HttpURLConnection) new URL(USERS_URL).openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(10000);
+
+                if (connection.getResponseCode() < 200 || connection.getResponseCode() >= 300) {
+                    throw new IllegalStateException("API returned HTTP " + connection.getResponseCode());
+                }
+
+                StringBuilder response = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(connection.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                } finally {
+                    connection.disconnect();
+                }
+
+                JSONArray jsonArray = new JSONArray(response.toString());
+                ArrayList<User> loaded = new ArrayList<>();
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject object = jsonArray.getJSONObject(i);
+                    loaded.add(new User(
+                            object.optInt("id"),
+                            object.optString("username", "ไม่ระบุชื่อ"),
+                            object.optString("email", "")
+                    ));
+                }
+
+                runOnUiThread(() -> {
+                    users.clear();
+                    users.addAll(loaded);
+                    adapter.notifyDataSetChanged();
+                });
+            } catch (Exception error) {
+                runOnUiThread(() -> Toast.makeText(
+                        this,
+                        "โหลดข้อมูลเจ้าของไม่สำเร็จ: " + error.getMessage(),
+                        Toast.LENGTH_LONG
+                ).show());
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        executor.shutdownNow();
+        super.onDestroy();
     }
 }

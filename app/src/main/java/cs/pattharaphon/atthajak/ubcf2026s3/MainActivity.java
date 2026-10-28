@@ -24,5 +24,11 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.cv_candle_menu).setOnClickListener(
                 view -> startActivity(new Intent(this, CandleActivity.class))
         );
+        findViewById(R.id.cv_temple_menu).setOnClickListener(
+                view -> startActivity(new Intent(this, TempleActivity.class))
+        );
+        findViewById(R.id.cv_user_menu).setOnClickListener(
+                view -> startActivity(new Intent(this, UserActivity.class))
+        );
     }
 }
